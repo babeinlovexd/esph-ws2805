@@ -26,6 +26,8 @@ class WS2805LightOutput : public light::AddressableLight {
     auto traits = light::LightTraits();
     // Expose as an RGBWW light (RGB + Cold White + Warm White)
     traits.set_supported_color_modes({light::ColorMode::RGB_COLD_WARM_WHITE});
+    traits.set_min_mireds(this->cold_white_temperature_);
+    traits.set_max_mireds(this->warm_white_temperature_);
     return traits;
   }
 
@@ -63,6 +65,14 @@ class WS2805LightOutput : public light::AddressableLight {
     this->controller_->Show();
   }
 
+  void set_cold_white_temperature(float cold_white_temperature) {
+    this->cold_white_temperature_ = cold_white_temperature;
+  }
+  void set_warm_white_temperature(float warm_white_temperature) {
+    this->warm_white_temperature_ = warm_white_temperature;
+  }
+  void set_color_interlock(bool color_interlock) { this->color_interlock_ = color_interlock; }
+
  protected:
   light::ESPColorView get_view_internal(int32_t index) const override {
     uint8_t *base = this->controller_->Pixels() + 5ULL * index;
@@ -74,6 +84,9 @@ class WS2805LightOutput : public light::AddressableLight {
   uint16_t num_leds_;
   uint8_t pin_;
   uint8_t *effect_data_{nullptr};
+  float cold_white_temperature_{153};
+  float warm_white_temperature_{500};
+  bool color_interlock_{false};
   NeoPixelBus<NeoGrbwwFeature, NeoWs2805Method> *controller_{nullptr};
 };
 
