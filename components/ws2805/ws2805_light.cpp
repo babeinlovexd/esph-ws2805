@@ -83,7 +83,11 @@ void WS2805LightOutput::setup() {
   channel_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
   channel_cfg.resolution_hz = ws2805_rmt_resolution_hz();
   channel_cfg.gpio_num = gpio_num_t(this->pin_);
-  channel_cfg.mem_block_symbols = 48; // WS2805 doesn't need huge blocks
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2)
+  channel_cfg.mem_block_symbols = 64; // Classic ESP32 and S2 require 64
+#else
+  channel_cfg.mem_block_symbols = 48; // WS2805 doesn't need huge blocks on modern chips
+#endif
   channel_cfg.trans_queue_depth = 1;
   channel_cfg.flags.invert_out = 0;
   channel_cfg.flags.with_dma = 0;
