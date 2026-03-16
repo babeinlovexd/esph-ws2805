@@ -10,9 +10,15 @@ This maps perfectly to the Home Assistant UI, providing correct Addressable RGB 
 
 ## Usage in ESPHome
 
-To use this component, you can include it directly from GitHub using the `external_components` block.
+To use this component, you can include it directly from GitHub using the `external_components` block. 
+You can define multiple zones/strips running in parallel on the ESP32 (e.g., ESP32-S3) without RMT crashes.
 
 ```yaml
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf # Also compatible with arduino
+
 external_components:
   - source:
       type: git
@@ -22,19 +28,30 @@ external_components:
 
 light:
   - platform: ws2805
-    name: "My WS2805 Strip"
-    pin: GPIO19 # The GPIO pin your data line is connected to
+    id: ws2805_zone_1
+    name: "My WS2805 Strip - Zone 1"
+    pin: GPIO4 # The GPIO pin your data line is connected to
     num_leds: 100 # Total number of LEDs on the strip
     effects:
-      - pulse:
-      - random:
       - addressable_rainbow:
+
+  - platform: ws2805
+    id: ws2805_zone_2
+    name: "My WS2805 Strip - Zone 2"
+    pin: GPIO5
+    num_leds: 100
+
+  - platform: ws2805
+    id: ws2805_zone_3
+    name: "My WS2805 Strip - Zone 3"
+    pin: GPIO6
+    num_leds: 100
 ```
 
 ## Features
 - **Addressable RGB Effects:** Since the component inherits from `AddressableLight`, you can add and use all Addressable light effects such as `addressable_rainbow`, `addressable_scan`, etc.
 - **Global CCT Control:** The Warm White and Cold White channels are globally set across the entire strip according to your CCT sliders in Home Assistant. This is exactly how tools like WLED manage RGBCCT setups.
-- **Hardware Agnostic (NeoPixelBus):** Uses the highly optimized Makuna `NeoPixelBus` library under the hood (`NeoWs2805Method`).
+- **Multi-Strip Support (Native RMT):** Uses ESPHome's highly optimized, native `esp32_rmt_led_strip` architecture instead of `NeoPixelBus`. This safely manages RMT channels, interrupt flags, and SRAM, allowing up to 8 parallel instances without `ESP_ERR_INVALID_STATE` limits on modern chips like the ESP32-S3.
 - **Brightness Scaling:** Proper mapping and scaling of the 5 channels relative to overall brightness.
 
 ---
@@ -49,9 +66,15 @@ Dadurch wird der Home Assistant Farbwähler (UI) perfekt unterstützt: Es gibt k
 
 ## Verwendung in ESPHome
 
-Um diese Komponente zu nutzen, kannst du sie direkt von GitHub über den `external_components` Block in deine Konfiguration einbinden.
+Um diese Komponente zu nutzen, kannst du sie direkt von GitHub über den `external_components` Block in deine Konfiguration einbinden. 
+Dabei können problemlos mehrere Zonen bzw. Streifen parallel auf einem ESP32 (z.B. ESP32-S3) laufen, ohne dass es zu RMT-Crashes kommt.
 
 ```yaml
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf # Kompatibel mit arduino und esp-idf
+
 external_components:
   - source:
       type: git
@@ -61,17 +84,28 @@ external_components:
 
 light:
   - platform: ws2805
-    name: "Mein WS2805 Streifen"
-    pin: GPIO19 # Der GPIO-Pin, an den deine Datenleitung angeschlossen ist
+    id: ws2805_zone_1
+    name: "Mein WS2805 Streifen - Zone 1"
+    pin: GPIO4 # Der GPIO-Pin, an den deine Datenleitung angeschlossen ist
     num_leds: 100 # Gesamtzahl der LEDs auf dem Streifen
     effects:
-      - pulse:
-      - random:
       - addressable_rainbow:
+
+  - platform: ws2805
+    id: ws2805_zone_2
+    name: "Mein WS2805 Streifen - Zone 2"
+    pin: GPIO5
+    num_leds: 100
+
+  - platform: ws2805
+    id: ws2805_zone_3
+    name: "Mein WS2805 Streifen - Zone 3"
+    pin: GPIO6
+    num_leds: 100
 ```
 
 ## Funktionen
 - **Adressierbare RGB-Effekte:** Da die Komponente von `AddressableLight` erbt, kannst du alle adressierbaren Lichteffekte wie `addressable_rainbow`, `addressable_scan` usw. nutzen.
 - **Globale CCT-Steuerung:** Die Warmweiß- und Kaltweiß-Kanäle werden für den gesamten Streifen anhand der CCT-Regler in Home Assistant global gesteuert (Genau so, wie WLED RGBCCT-Setups verwaltet).
-- **Hardware-Unabhängig (NeoPixelBus):** Verwendet im Hintergrund die stark optimierte Makuna `NeoPixelBus` Bibliothek (`NeoWs2805Method`).
+- **Multi-Strip Support (Nativer RMT):** Nutzt nun ESPHomes hochoptimierte `esp32_rmt_led_strip` Architektur anstelle von `NeoPixelBus`. So werden RMT-Kanäle, Interrupt-Flags und SRAM ressourcenschonend verwaltet. Das ermöglicht bis zu 8 parallele Instanzen ohne `ESP_ERR_INVALID_STATE` Limits, speziell auf modernen Chips wie dem ESP32-S3.
 - **Helligkeitsskalierung:** Korrektes Mapping und Skalierung der 5 Kanäle relativ zur Gesamthelligkeit.
