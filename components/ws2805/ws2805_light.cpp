@@ -86,7 +86,7 @@ void WS2805LightOutput::cleanup_() {
 void WS2805LightOutput::setup() {
   size_t buffer_size = this->num_leds_ * 5;
 
-  this->buf_ = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  this->buf_ = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
   if (this->buf_ == nullptr) {
     ESP_LOGE(TAG, "Cannot allocate LED buffer!");
     goto fail;
@@ -100,11 +100,11 @@ void WS2805LightOutput::setup() {
   }
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
-  this->rmt_buf_ = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  this->rmt_buf_ = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 #elif ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-  this->rmt_buf_ = (rmt_symbol_word_t *)heap_caps_malloc((buffer_size * 8 + 1) * sizeof(rmt_symbol_word_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  this->rmt_buf_ = (rmt_symbol_word_t *)heap_caps_malloc((buffer_size * 8 + 1) * sizeof(rmt_symbol_word_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 #else
-  this->rmt_buf_ = (rmt_item32_t *)heap_caps_malloc((buffer_size * 8 + 1) * sizeof(rmt_item32_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  this->rmt_buf_ = (rmt_item32_t *)heap_caps_malloc((buffer_size * 8 + 1) * sizeof(rmt_item32_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 #endif
   if (this->rmt_buf_ == nullptr) {
     ESP_LOGE(TAG, "Cannot allocate RMT buffer!");
@@ -124,7 +124,11 @@ void WS2805LightOutput::setup() {
 #endif
   channel_cfg.trans_queue_depth = 1;
   channel_cfg.flags.invert_out = 0;
+#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
+  channel_cfg.flags.with_dma = 1;
+#else
   channel_cfg.flags.with_dma = 0;
+#endif
   channel_cfg.intr_priority = 0;
 
   if (rmt_new_tx_channel(&channel_cfg, &this->channel_) != ESP_OK) {
@@ -191,15 +195,15 @@ void WS2805LightOutput::setup() {
   float ratio;
   ratio = (float) ws2805_rmt_resolution_hz() / 1e09f;
 
-  // 0-bit: 300ns high, 900ns low
-  this->params_.bit0.duration0 = (uint32_t) (ratio * 300);
+  // 0-bit: 400ns high, 850ns low
+  this->params_.bit0.duration0 = (uint32_t) (ratio * 400);
   this->params_.bit0.level0 = 1;
-  this->params_.bit0.duration1 = (uint32_t) (ratio * 900);
+  this->params_.bit0.duration1 = (uint32_t) (ratio * 850);
   this->params_.bit0.level1 = 0;
-  // 1-bit: 900ns high, 300ns low
-  this->params_.bit1.duration0 = (uint32_t) (ratio * 900);
+  // 1-bit: 850ns high, 400ns low
+  this->params_.bit1.duration0 = (uint32_t) (ratio * 850);
   this->params_.bit1.level0 = 1;
-  this->params_.bit1.duration1 = (uint32_t) (ratio * 300);
+  this->params_.bit1.duration1 = (uint32_t) (ratio * 400);
   this->params_.bit1.level1 = 0;
   // reset: 0ns high, 300us (300000ns) low
   this->params_.reset.duration0 = (uint32_t) (ratio * 0);
