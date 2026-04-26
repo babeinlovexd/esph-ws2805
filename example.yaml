@@ -1,0 +1,30 @@
+# Example configuration for esph-ws2805
+esphome:
+  name: ws2805-example
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+# Import the external component from your GitHub repository
+external_components:
+  - source:
+      type: git
+      url: https://github.com/babeinlovexd/esph-ws2805
+      ref: main
+    components: [ ws2805 ]
+
+light:
+  - platform: ws2805
+    id: ws2805_light
+    name: "WS2805 LED Strip"
+    pin: GPIO4
+    num_leds: 60
+    color_interlock: true # Protects power supply by interlocking RGB and White
+    cold_white_color_temperature: 153 mireds
+    warm_white_color_temperature: 500 mireds
+    effects:
+      - addressable_rainbow:
+      - addressable_scan:
+      - addressable_twinkle:
