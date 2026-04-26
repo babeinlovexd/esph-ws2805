@@ -55,7 +55,6 @@ class WS2805LightOutput : public light::AddressableLight {
 
   light::LightTraits get_traits() override {
     auto traits = light::LightTraits();
-    // Expose as an RGBWW light (RGB + Cold White + Warm White)
     if (this->color_interlock_) {
       traits.set_supported_color_modes({light::ColorMode::RGB, light::ColorMode::COLD_WARM_WHITE});
     } else {
@@ -98,11 +97,7 @@ class WS2805LightOutput : public light::AddressableLight {
       return light::ESPColorView(&dummy[0], &dummy[1], &dummy[2], nullptr, &dummy[4], &this->correction_);
     }
 
-    // Hardware byte order is GRBWW (5 bytes per LED)
     uint8_t *base = this->buf_ + 5 * index;
-    // Map R, G, B to ESPColorView. Leave White as nullptr.
-    // ESPColorView wants R, G, B, W, cwhite
-    // offset 0=G, 1=R, 2=B, 3=WW, 4=CW
     return light::ESPColorView(base + 1, base + 0, base + 2, nullptr, this->effect_data_ + index, &this->correction_);
   }
 
@@ -121,7 +116,7 @@ class WS2805LightOutput : public light::AddressableLight {
   rmt_channel_handle_t channel_{nullptr};
   rmt_encoder_handle_t encoder_{nullptr};
 #else
-  rmt_channel_t channel_{RMT_CHANNEL_MAX}; // Need dynamic allocation in old ESP-IDF
+  rmt_channel_t channel_{RMT_CHANNEL_MAX};
 #endif
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
   uint8_t *rmt_buf_{nullptr};
@@ -132,5 +127,5 @@ class WS2805LightOutput : public light::AddressableLight {
 #endif
 };
 
-}  // namespace ws2805
-}  // namespace esphome
+}
+}

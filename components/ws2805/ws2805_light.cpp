@@ -15,7 +15,7 @@ uint32_t WS2805LightOutput::ws2805_rmt_resolution_hz() {
   esp_clk_tree_src_get_freq_hz((soc_module_clk_t) RMT_CLK_SRC_DEFAULT, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &freq);
   return freq;
 #else
-  return 10000000; // 10MHz resolution (80MHz APB / 8 clk_div)
+  return 10000000;
 #endif
 }
 
@@ -118,9 +118,9 @@ void WS2805LightOutput::setup() {
   channel_cfg.resolution_hz = ws2805_rmt_resolution_hz();
   channel_cfg.gpio_num = gpio_num_t(this->pin_);
 #if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2)
-  channel_cfg.mem_block_symbols = 64; // Classic ESP32 and S2 require 64
+  channel_cfg.mem_block_symbols = 64;
 #else
-  channel_cfg.mem_block_symbols = 48; // WS2805 doesn't need huge blocks on modern chips
+  channel_cfg.mem_block_symbols = 48;
 #endif
   channel_cfg.trans_queue_depth = 1;
   channel_cfg.flags.invert_out = 0;
@@ -161,17 +161,15 @@ void WS2805LightOutput::setup() {
   }
 
 #else
-  // For ESP-IDF 4.x RMT driver
-  // Use ESPHome's built in real_channel loop behavior
   rmt_config_t rmt_cfg;
   rmt_cfg.rmt_mode = RMT_MODE_TX;
   rmt_cfg.gpio_num = gpio_num_t(this->pin_);
-  rmt_cfg.mem_block_num = 1; // Explicitly 1 block as requested
+  rmt_cfg.mem_block_num = 1;
   rmt_cfg.tx_config.loop_en = false;
   rmt_cfg.tx_config.idle_output_en = true;
   rmt_cfg.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
   rmt_cfg.tx_config.carrier_en = false;
-  rmt_cfg.clk_div = 8; // 80MHz / 8 = 10MHz = 100ns ticks
+  rmt_cfg.clk_div = 8;
 
   this->channel_ = RMT_CHANNEL_MAX;
   for (int ch = 0; ch < RMT_CHANNEL_MAX; ch++) {
@@ -197,17 +195,14 @@ void WS2805LightOutput::setup() {
 
   ESP_LOGCONFIG(TAG, "  RMT Resolution: %" PRIu32 " Hz (Ratio: %f)", ws2805_rmt_resolution_hz(), ratio);
 
-  // 0-bit: 400ns high, 850ns low
   this->params_.bit0.duration0 = (uint32_t) (ratio * 400);
   this->params_.bit0.level0 = 1;
   this->params_.bit0.duration1 = (uint32_t) (ratio * 850);
   this->params_.bit0.level1 = 0;
-  // 1-bit: 850ns high, 400ns low
   this->params_.bit1.duration0 = (uint32_t) (ratio * 850);
   this->params_.bit1.level0 = 1;
   this->params_.bit1.duration1 = (uint32_t) (ratio * 400);
   this->params_.bit1.level1 = 0;
-  // reset: 0ns high, 300us (300000ns) low
   this->params_.reset.duration0 = (uint32_t) (ratio * 0);
   this->params_.reset.level0 = 1;
   this->params_.reset.duration1 = (uint32_t) (ratio * 300000);
@@ -233,25 +228,41 @@ void WS2805LightOutput::write_state(light::LightState *state) {
   float red, green, blue, cwhite, wwhite;
   state->current_values_as_rgbww(&red, &green, &blue, &cwhite, &wwhite, true);
 
+  ESP_LOGI("ws2805", "mode=%d r=%.2f g=%.2f b=%.2f cw=%.2f ww=%.2f", (int)state->current_values.get_color_mode(), red, green, blue, cwhite, wwhite);
+
+  bool clear_rgb = false;
+
+  if (this->color_interlock_) {
+    auto color_mode = state->current_values.get_color_mode();
+    if (color_mode == light::ColorMode::COLD_WARM_WHITE) {
+      clear_rgb = true;
+    } else if (color_mode == light::ColorMode::RGB) {
+      cwhite = 0.0f;
+      wwhite = 0.0f;
+    }
+  }
+
   uint8_t cw = cwhite * 255;
   uint8_t ww = wwhite * 255;
 
   for (int i = 0; i < this->size(); i++) {
-    // GRBWW byte order: Offset 3 is W1 (Warm White typically), Offset 4 is W2 (Cold White typically).
-    this->buf_[i * 5 + 3] = ww; // W1
-    this->buf_[i * 5 + 4] = cw; // W2
+    this->buf_[i * 5 + 3] = ww;
+    this->buf_[i * 5 + 4] = cw;
+
+    if (clear_rgb) {
+      this->buf_[i * 5 + 0] = 0;
+      this->buf_[i * 5 + 1] = 0;
+      this->buf_[i * 5 + 2] = 0;
+    }
   }
 
-  // Workaround to ensure mark_shown_() doesn't unrequest the power supply if only CCT channels are active
-  // Since ESPColorView in get_view_internal() has `white` mapped to nullptr, mark_shown_() will only see RGB values.
   uint8_t temp_g = this->buf_[0];
   if (cw > 0 || ww > 0) {
-    this->buf_[0] = 1; // Temporarily trick mark_shown_() into seeing a non-zero pixel
+    this->buf_[0] = 1;
   }
 
   this->mark_shown_();
 
-  // Restore original pixel color
   this->buf_[0] = temp_g;
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
@@ -288,7 +299,6 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     psrc++;
   }
 
-  // add reset symbol
   *pdest = this->params_.reset;
   pdest++;
   len++;
@@ -309,11 +319,10 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     return;
   }
 #else
-  // For ESP-IDF 4.x
   rmt_write_items(this->channel_, (rmt_item32_t *)this->rmt_buf_, len, true);
 #endif
   this->status_clear_warning();
 }
 
-}  // namespace ws2805
-}  // namespace esphome
+}
+}
