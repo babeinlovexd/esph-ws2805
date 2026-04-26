@@ -82,14 +82,14 @@ class WS2805LightOutput : public light::AddressableLight {
   }
   void set_color_interlock(bool color_interlock) { this->color_interlock_ = color_interlock; }
   void set_max_refresh_rate(uint32_t interval_us) { this->max_refresh_rate_ = interval_us; }
-
- protected:
-  void cleanup_();
-  static uint32_t ws2805_rmt_resolution_hz();
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
   static size_t ws2805_encoder_callback(const void *data, size_t size, size_t symbols_written, size_t symbols_free,
                                              rmt_symbol_word_t *symbols, bool *done, void *arg);
 #endif
+
+ protected:
+  void cleanup_();
+  static uint32_t ws2805_rmt_resolution_hz();
 
   light::ESPColorView get_view_internal(int32_t index) const override {
     if (this->buf_ == nullptr) {
