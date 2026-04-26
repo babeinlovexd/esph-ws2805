@@ -11,11 +11,11 @@ from esphome.const import (
     CONF_WARM_WHITE_COLOR_TEMPERATURE,
     CONF_NUMBER
 )
+from esphome.components.esp32 import include_builtin_idf_component
 
 CODEOWNERS = ["@BabeinlovexD"]
 DEPENDENCIES = ["esp32"]
 
-# Declare the namespace and class
 ws2805_ns = cg.esphome_ns.namespace("ws2805")
 WS2805LightOutput = ws2805_ns.class_("WS2805LightOutput", light.AddressableLight)
 
@@ -30,12 +30,11 @@ CONFIG_SCHEMA = light.ADDRESSABLE_LIGHT_SCHEMA.extend({
 }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
-    # Register the AddressableLight
+    include_builtin_idf_component("esp_driver_rmt")
     var = cg.new_Pvariable(config[CONF_OUTPUT_ID], config[CONF_NUM_LEDS], config[CONF_PIN][CONF_NUMBER])
     await cg.register_component(var, config)
     await light.register_light(var, config)
 
-    # Set CCT parameters
     cg.add(var.set_color_interlock(config[CONF_COLOR_INTERLOCK]))
     cg.add(var.set_cold_white_temperature(config[CONF_COLD_WHITE_COLOR_TEMPERATURE]))
     cg.add(var.set_warm_white_temperature(config[CONF_WARM_WHITE_COLOR_TEMPERATURE]))
