@@ -9,7 +9,7 @@
 </div>
 <br>
 
-🌍 **[Lies dies auf Deutsch](README.md)**
+🌍 **[Lies dies auf Deutsch](README_de.md)**
 
 This is an external component for ESPHome that provides support for **WS2805** 5-channel (RGB + Warm White + Cold White) LED strips.
 
