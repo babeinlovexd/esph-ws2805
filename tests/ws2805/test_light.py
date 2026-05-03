@@ -1,3 +1,5 @@
+CODEOWNERS = ["@BabeinlovexD"]
+
 import sys
 from unittest.mock import MagicMock, patch
 import pytest
