@@ -248,13 +248,46 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     }
   }
 
-  // --- MANUELLE TRANSITIONS-LOGIK FÜR CW/WW ---
-  this->current_cw_ += (target_cw - this->current_cw_) * (this->transition_speed_ * dt);
-  this->current_ww_ += (target_ww - this->current_ww_) * (this->transition_speed_ * dt);
+  // --- MANUELLE, LINEARE TRANSITIONS-LOGIK FÜR CW/WW ---
+  // 1. Neue Zielwerte erkennen und Schritte für exakte Dauer berechnen
+  if (this->target_cw_internal_ != target_cw || this->target_ww_internal_ != target_ww) {
+    this->target_cw_internal_ = target_cw;
+    this->target_ww_internal_ = target_ww;
 
-  // Exakt auf den Zielwert springen, wenn die Distanz minimal wird
-  if (std::abs(target_cw - this->current_cw_) < 0.005f) this->current_cw_ = target_cw;
-  if (std::abs(target_ww - this->current_ww_) < 0.005f) this->current_ww_ = target_ww;
+    if (this->transition_speed_ <= 0.0f) {
+      this->current_cw_ = target_cw;
+      this->current_ww_ = target_ww;
+      this->step_cw_ = 0.0f;
+      this->step_ww_ = 0.0f;
+    } else {
+      // transition_speed_ definiert jetzt die exakte Dauer in Sekunden
+      this->step_cw_ = (target_cw - this->current_cw_) / this->transition_speed_;
+      this->step_ww_ = (target_ww - this->current_ww_) / this->transition_speed_;
+    }
+  }
+
+  // 2. CW strikt linear faden
+  if (this->current_cw_ != this->target_cw_internal_) {
+    float move_cw = this->step_cw_ * dt;
+    // Prüfen, ob wir das Ziel in diesem Frame überschreiten würden
+    if ((this->step_cw_ > 0 && this->current_cw_ + move_cw >= this->target_cw_internal_) ||
+        (this->step_cw_ < 0 && this->current_cw_ + move_cw <= this->target_cw_internal_)) {
+      this->current_cw_ = this->target_cw_internal_;
+    } else {
+      this->current_cw_ += move_cw;
+    }
+  }
+
+  // 3. WW strikt linear faden
+  if (this->current_ww_ != this->target_ww_internal_) {
+    float move_ww = this->step_ww_ * dt;
+    if ((this->step_ww_ > 0 && this->current_ww_ + move_ww >= this->target_ww_internal_) ||
+        (this->step_ww_ < 0 && this->current_ww_ + move_ww <= this->target_ww_internal_)) {
+      this->current_ww_ = this->target_ww_internal_;
+    } else {
+      this->current_ww_ += move_ww;
+    }
+  }
 
   uint8_t cw = this->current_cw_ * 255;
   uint8_t ww = this->current_ww_ * 255;
