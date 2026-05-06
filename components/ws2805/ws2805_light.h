@@ -82,6 +82,7 @@ class WS2805LightOutput : public light::AddressableLight {
   }
   void set_color_interlock(bool color_interlock) { this->color_interlock_ = color_interlock; }
   void set_max_refresh_rate(uint32_t interval_us) { this->max_refresh_rate_ = interval_us; }
+  void set_transition_speed(float speed) { this->transition_speed_ = speed; }
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
   static size_t ws2805_encoder_callback(const void *data, size_t size, size_t symbols_written, size_t symbols_free,
                                              rmt_symbol_word_t *symbols, bool *done, void *arg);
@@ -109,6 +110,9 @@ class WS2805LightOutput : public light::AddressableLight {
   float cold_white_temperature_{153};
   float warm_white_temperature_{500};
   bool color_interlock_{false};
+  float current_cw_{0.0f};
+  float current_ww_{0.0f};
+  float transition_speed_{3.0f};
 
   uint8_t *buf_{nullptr};
   LedParams params_;
