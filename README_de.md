@@ -52,6 +52,7 @@ light:
     color_interlock: false
     cold_white_color_temperature: 153 mireds
     warm_white_color_temperature: 500 mireds
+    cct_transition_speed: 3.0
     gamma_correct: 2.2
     effects:
       - addressable_rainbow:
