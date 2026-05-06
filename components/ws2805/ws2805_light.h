@@ -113,6 +113,10 @@ class WS2805LightOutput : public light::AddressableLight {
   float current_cw_{0.0f};
   float current_ww_{0.0f};
   float transition_speed_{3.0f};
+  float target_cw_internal_{-1.0f};
+  float target_ww_internal_{-1.0f};
+  float step_cw_{0.0f};
+  float step_ww_{0.0f};
 
   uint8_t *buf_{nullptr};
   LedParams params_;
