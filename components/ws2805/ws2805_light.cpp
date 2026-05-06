@@ -232,7 +232,7 @@ void WS2805LightOutput::write_state(light::LightState *state) {
 
   // ZIELWERTE (remote_values) lesen, NICHT die eingefrorenen current_values
   float target_r, target_g, target_b, target_cw, target_ww;
-  state->remote_values_as_rgbww(&target_r, &target_g, &target_b, &target_cw, &target_ww, true);
+  state->remote_values.as_rgbww(&target_r, &target_g, &target_b, &target_cw, &target_ww, true);
 
   ESP_LOGI("ws2805", "mode=%d r=%.2f g=%.2f b=%.2f cw=%.2f ww=%.2f", (int)state->current_values.get_color_mode(), target_r, target_g, target_b, target_cw, target_ww);
 
