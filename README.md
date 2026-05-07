@@ -52,6 +52,7 @@ light:
     color_interlock: false
     cold_white_color_temperature: 153 mireds
     warm_white_color_temperature: 500 mireds
+    cct_transition_speed: 3.0
     gamma_correct: 2.2
     effects:
       - addressable_rainbow:
@@ -80,6 +81,7 @@ You can use all standard ESPHome variables (like `name`, `id`, `gamma_correct`, 
 * **`color_interlock`** *(Optional, boolean)*: Prevents white LEDs and RGB LEDs from being at full brightness simultaneously (useful for power supply management or thermal limits). Defaults to `false`.
 * **`cold_white_color_temperature`** *(Optional)*: The color temperature of your cold white LEDs in mireds. Default value is `153 mireds` (~6500K).
 * **`warm_white_color_temperature`** *(Optional)*: The color temperature of your warm white LEDs in mireds. Default value is `500 mireds` (~2000K).
+* **`cct_transition_speed`** *(Optional, float)*: Controls the speed of fading transitions for the white (CCT) channels. Default value is `3.0`.
 
 ---
 

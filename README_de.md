@@ -52,6 +52,7 @@ light:
     color_interlock: false
     cold_white_color_temperature: 153 mireds
     warm_white_color_temperature: 500 mireds
+    cct_transition_speed: 3.0
     gamma_correct: 2.2
     effects:
       - addressable_rainbow:
@@ -80,6 +81,7 @@ Du kannst alle Standard-ESPHome-Variablen (wie `name`, `id`, `gamma_correct`, `e
 * **`color_interlock`** *(Optional, Boolean)*: Verhindert, dass die weißen LEDs und die RGB-LEDs gleichzeitig mit voller Kraft leuchten (nützlich für das Netzteil-Management oder thermische Limits). Standard ist `false`.
 * **`cold_white_color_temperature`** *(Optional)*: Die Farbtemperatur deiner Kaltweiß-LEDs in Mireds. Standardwert ist `153 mireds` (~6500K).
 * **`warm_white_color_temperature`** *(Optional)*: Die Farbtemperatur deiner Warmweiß-LEDs in Mireds. Standardwert ist `500 mireds` (~2000K).
+* **`cct_transition_speed`** *(Optional, float)*: Steuert die Geschwindigkeit der Fade-Übergänge für die weißen (CCT) Kanäle. Der Standardwert ist `3.0`.
 
 ---
 
