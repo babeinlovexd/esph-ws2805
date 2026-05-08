@@ -1,0 +1,20 @@
+esphome:
+  name: ci-test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: components # <-- Holt den Code direkt aus deinem lokalen Ordner!
+    components: [ ws2805 ]
+
+light:
+  - platform: ws2805
+    id: ws2805_light
+    name: "WS2805 Test"
+    pin: GPIO4
+    num_leds: 1
