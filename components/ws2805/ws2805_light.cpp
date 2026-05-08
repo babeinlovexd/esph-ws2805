@@ -234,7 +234,7 @@ void WS2805LightOutput::write_state(light::LightState *state) {
   float target_r, target_g, target_b, target_cw, target_ww;
   state->remote_values.as_rgbww(&target_r, &target_g, &target_b, &target_cw, &target_ww, true);
 
-  ESP_LOGI("ws2805", "mode=%d r=%.2f g=%.2f b=%.2f cw=%.2f ww=%.2f", (int)state->current_values.get_color_mode(), target_r, target_g, target_b, target_cw, target_ww);
+  ESP_LOGV("ws2805", "mode=%d r=%.2f g=%.2f b=%.2f cw=%.2f ww=%.2f", (int)state->current_values.get_color_mode(), target_r, target_g, target_b, target_cw, target_ww);
 
   bool clear_rgb = false;
 
@@ -289,8 +289,36 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     }
   }
 
-  uint8_t cw = this->current_cw_ * 255;
-  uint8_t ww = this->current_ww_ * 255;
+  // --- BERECHNUNG DER AUSGABEWERTE ---
+  float base_cw = this->current_cw_ * 255.0f;
+  float base_ww = this->current_ww_ * 255.0f;
+  uint8_t cw, ww;
+
+  if (this->dithering_) {
+    // Dithering-Logik für Kaltweiß
+    float desired_cw = base_cw + this->error_cw_;
+    if (desired_cw >= 255.0f) cw = 255;
+    else if (desired_cw <= 0.0f) cw = 0;
+    else cw = static_cast<uint8_t>(std::round(desired_cw));
+
+    if (base_cw <= 0.0f || base_cw >= 255.0f) this->error_cw_ = 0.0f;
+    else this->error_cw_ = desired_cw - static_cast<float>(cw);
+
+    // Dithering-Logik für Warmweiß
+    float desired_ww = base_ww + this->error_ww_;
+    if (desired_ww >= 255.0f) ww = 255;
+    else if (desired_ww <= 0.0f) ww = 0;
+    else ww = static_cast<uint8_t>(std::round(desired_ww));
+
+    if (base_ww <= 0.0f || base_ww >= 255.0f) this->error_ww_ = 0.0f;
+    else this->error_ww_ = desired_ww - static_cast<float>(ww);
+  } else {
+    // Normaler Modus ohne Dithering
+    cw = static_cast<uint8_t>(std::round(base_cw));
+    ww = static_cast<uint8_t>(std::round(base_ww));
+    this->error_cw_ = 0.0f;
+    this->error_ww_ = 0.0f;
+  }
 
   int n = this->size();
   if (clear_rgb) {
@@ -375,8 +403,16 @@ void WS2805LightOutput::write_state(light::LightState *state) {
 #endif
   this->status_clear_warning();
 
-  // NEU: ESPHome zwingen, weiter zu rendern, bis der Weiß-Fade fertig ist
-  if (this->current_cw_ != target_cw || this->current_ww_ != target_ww) {
+  // Prüfen, ob wir weiter rendern müssen
+  bool is_fading = (std::abs(this->current_cw_ - target_cw) > 0.001f || std::abs(this->current_ww_ - target_ww) > 0.001f);
+  bool needs_dither = false;
+
+  if (this->dithering_) {
+    needs_dither = (base_cw > 0.01f && base_cw < 254.99f && std::abs(base_cw - std::round(base_cw)) > 0.001f) ||
+                   (base_ww > 0.01f && base_ww < 254.99f && std::abs(base_ww - std::round(base_ww)) > 0.001f);
+  }
+
+  if (is_fading || needs_dither) {
     this->schedule_show();
   }
 }

@@ -52,7 +52,8 @@ CONFIG_SCHEMA = cv.All(
     cv.Optional(CONF_COLD_WHITE_COLOR_TEMPERATURE, default="153 mireds"): cv.color_temperature,
     cv.Optional(CONF_WARM_WHITE_COLOR_TEMPERATURE, default="500 mireds"): cv.color_temperature,
     cv.Optional("max_refresh_rate", default="4ms"): cv.positive_time_period_microseconds,
-    cv.Optional("cct_transition_speed", default=3.0): cv.float_,
+    cv.Optional("cct_transition_speed", default="3s"): cv.positive_time_period_milliseconds,
+    cv.Optional("dithering", default=False): cv.boolean,
 }).extend(cv.COMPONENT_SCHEMA),
     validate_rmt_usage
 )
@@ -70,3 +71,5 @@ async def to_code(config):
         cg.add(var.set_max_refresh_rate(config["max_refresh_rate"]))
     if "cct_transition_speed" in config:
         cg.add(var.set_transition_speed(config["cct_transition_speed"]))
+    if "dithering" in config:
+        cg.add(var.set_dithering(config["dithering"]))
