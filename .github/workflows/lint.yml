@@ -1,0 +1,33 @@
+name: Linting
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cpp-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run clang-format
+        uses: jidicula/clang-format-action@v4.11.0
+        with:
+          clang-format-version: '16'
+          check-path: 'components'
+
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Black
+        run: pip install black
+        
+      - name: Run Black (Python Formatter)
+        run: black --check components/
