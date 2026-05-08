@@ -24,6 +24,8 @@ light:
     color_interlock: true # Protects power supply by interlocking RGB and White
     cold_white_color_temperature: 153 mireds
     warm_white_color_temperature: 500 mireds
+    cct_transition_speed: 3s
+    dithering: true
     effects:
       - addressable_rainbow:
       - addressable_scan:
