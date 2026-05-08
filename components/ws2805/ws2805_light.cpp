@@ -254,6 +254,9 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     this->target_cw_internal_ = target_cw;
     this->target_ww_internal_ = target_ww;
 
+    // NEU: Eigener Log-Auswurf für die exakten CW und WW Hardware-Werte in Prozent
+    ESP_LOGD(TAG, "White Channel Hardware Targets -> CW: %.1f%%, WW: %.1f%%", target_cw * 100.0f, target_ww * 100.0f);
+
     if (this->transition_speed_ <= 0.0f) {
       this->current_cw_ = target_cw;
       this->current_ww_ = target_ww;
