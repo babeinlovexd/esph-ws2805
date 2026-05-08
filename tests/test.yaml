@@ -9,7 +9,7 @@ esp32:
 external_components:
   - source:
       type: local
-      path: components # <-- Holt den Code direkt aus deinem lokalen Ordner!
+      path: ../components
     components: [ ws2805 ]
 
 light:
