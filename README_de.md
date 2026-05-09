@@ -83,7 +83,7 @@ Du kannst alle Standard-ESPHome-Variablen (wie `name`, `id`, `gamma_correct`, `e
 * **`cold_white_color_temperature`** *(Optional)*: Die Farbtemperatur deiner Kaltweiß-LEDs in Mireds. Standardwert ist `153 mireds` (~6500K).
 * **`warm_white_color_temperature`** *(Optional)*: Die Farbtemperatur deiner Warmweiß-LEDs in Mireds. Standardwert ist `500 mireds` (~2000K).
 * **`cct_transition_speed`** *(Optional, time)*: Steuert die Geschwindigkeit der Fade-Übergänge für die weißen (CCT) Kanäle in Sekunden/Millisekunden (z.B. `3s`). Der Standardwert ist `3s`.
-* **`dithering`** *(Optional, Boolean)*: Aktiviert temporales Dithering für die weißen (CW/WW) Kanäle, was das Ruckeln/Flimmern bei geringer Helligkeit oder langsamem Faden verringert. Standard ist `false`.
+* **`dithering`** *(Optional, Boolean)*: Aktiviert temporales Dithering für die weißen (CW/WW) Kanäle, was das Ruckeln/Flimmern bei geringer Helligkeit oder langsamem Faden verringert. Standard ist `false`. Siehe [docu.md](docu.md) für weitere Details.
 
 ---
 

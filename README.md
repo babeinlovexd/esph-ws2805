@@ -83,7 +83,7 @@ You can use all standard ESPHome variables (like `name`, `id`, `gamma_correct`, 
 * **`cold_white_color_temperature`** *(Optional)*: The color temperature of your cold white LEDs in mireds. Default value is `153 mireds` (~6500K).
 * **`warm_white_color_temperature`** *(Optional)*: The color temperature of your warm white LEDs in mireds. Default value is `500 mireds` (~2000K).
 * **`cct_transition_speed`** *(Optional, time)*: Controls the speed of fading transitions for the white (CCT) channels. Default value is `3s`.
-* **`dithering`** *(Optional, boolean)*: Enables temporal dithering for the white (CW/WW) channels, reducing stepping/flickering at low brightness or during slow fading. Defaults to `false`.
+* **`dithering`** *(Optional, boolean)*: Enables temporal dithering for the white (CW/WW) channels, reducing stepping/flickering at low brightness or during slow fading. Defaults to `false`. See [docu.md](docu.md) for more details.
 
 ---
 
