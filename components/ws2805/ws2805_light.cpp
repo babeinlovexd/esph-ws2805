@@ -292,12 +292,15 @@ void WS2805LightOutput::write_state(light::LightState *state) {
     }
   }
 
+  // Prüfen, ob wir uns noch in einem Fade befinden
+  bool is_fading = (std::abs(this->current_cw_ - target_cw) > 0.001f || std::abs(this->current_ww_ - target_ww) > 0.001f);
+
   // --- BERECHNUNG DER AUSGABEWERTE ---
   float base_cw = this->current_cw_ * 255.0f;
   float base_ww = this->current_ww_ * 255.0f;
   uint8_t cw, ww;
 
-  if (this->dithering_) {
+  if (this->dithering_ && is_fading) {
     // Dithering-Logik für Kaltweiß
     float desired_cw = base_cw + this->error_cw_;
     if (desired_cw >= 255.0f) cw = 255;
@@ -406,16 +409,8 @@ void WS2805LightOutput::write_state(light::LightState *state) {
 #endif
   this->status_clear_warning();
 
-  // Prüfen, ob wir weiter rendern müssen
-  bool is_fading = (std::abs(this->current_cw_ - target_cw) > 0.001f || std::abs(this->current_ww_ - target_ww) > 0.001f);
-  bool needs_dither = false;
-
-  if (this->dithering_) {
-    needs_dither = (base_cw > 0.01f && base_cw < 254.99f && std::abs(base_cw - std::round(base_cw)) > 0.001f) ||
-                   (base_ww > 0.01f && base_ww < 254.99f && std::abs(base_ww - std::round(base_ww)) > 0.001f);
-  }
-
-  if (is_fading || needs_dither) {
+  // Render-Loop künstlich wachhalten, solange Fade läuft
+  if (is_fading) {
     this->schedule_show();
   }
 }
