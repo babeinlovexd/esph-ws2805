@@ -351,15 +351,17 @@ void WS2805LightOutput::write_state(light::LightState *state) {
 
   this->buf_[0] = temp_g;
 
+  int timeout_ms = (this->num_leds_ * 50) / 1000 + 50;
+
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-  esp_err_t error = rmt_tx_wait_all_done(this->channel_, 1000);
+  esp_err_t error = rmt_tx_wait_all_done(this->channel_, timeout_ms);
   if (error != ESP_OK) {
     ESP_LOGE(TAG, "RMT TX timeout");
     this->status_set_warning();
     return;
   }
 #else
-  rmt_wait_tx_done(this->channel_, 1000);
+  rmt_wait_tx_done(this->channel_, pdMS_TO_TICKS(timeout_ms));
 #endif
   size_t buffer_size = this->num_leds_ * 5;
 
